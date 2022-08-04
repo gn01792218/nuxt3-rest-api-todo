@@ -1,12 +1,7 @@
 import { db } from '../../db'
-import { Todo } from '../../../types/gloable'
+import { Todo, ApiMethods } from '../../../types/gloable'
 import { v4 as uuid } from 'uuid'
-enum ApiMethods{
-    GET = "GET",
-    POST = "POST",
-    PUT = "PUT",
-    DELETE = "DELETE"
-}
+import { sendError } from 'h3'
 export default defineEventHandler(async (e)=>{
     const method = e.req.method
     switch(method){
@@ -14,7 +9,14 @@ export default defineEventHandler(async (e)=>{
             return db.todos;
         case ApiMethods.POST:
             const body =await useBody(e)
-            if(!body) throw new Error('Oops~')
+            if(!body) {
+                const error = createError({
+                    statusCode:400,
+                    statusMessage:'Bad request',
+                    data:{}
+                })
+                sendError(e,error)
+            }
             const newTodo:Todo = {
                 id:uuid(),
                 title:body.title,
